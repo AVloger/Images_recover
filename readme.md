@@ -226,9 +226,44 @@
 2. 图像加密：也许我们可以向图像加密进军，但问题是这些算法有可能无法完全恢复图片，所以也许加密的时候需要加一个标准图片（比较好恢复的图片），让其余需要被加密的图片都和这个标准图片被相同的顺序打乱，这样就可以较好的恢复回去了。
 3. 时间序列与CNN：我们可以对矩阵形式的数据（例如时间序列）进行排序，对于时间序列来说，时间维度是不可以动的，但是特征的维度大家一般都没有考虑过，我们可以认为其特征的维度是被打乱过顺序的，我们可以将其恢复成有形状的样子，这样时间序列就可以被CNN进行滤波了（计算机视觉的发展还是属于比较好的领域），这样将不同的领域进行了结合。
 
-# 4 代码
-&emsp;&emsp;
+## 4 代码与使用
+&emsp;&emsp;本项目的代码均上传到[github](https://github.com/QuYue/Images_recover "Images_recover link")上了，其地址为
+https://github.com/QuYue/Images_recover， 有兴趣的话大家可以查看。
+&emsp;&emsp;其具体**使用方法**如下：
+1. **彩图恢复**：
+    ```shell
+    在cmd或shell中输入：
+    python demo.py -i 图片的名字（默认"lena.jpg"） -p 图片的路径（默认"../Data/Images/"）
 
+    或者输入查看帮助：
+    python demo.py -h
+    结果如下：
+    usage: demo.py [-h] [-i str] [-p str]
+
+    A demo for RGB image recover.
+
+    optional arguments:
+    -h, --help           show this help message and exit
+    -i str, --image str  the name of the image. (default: 'lena.jpg' )
+    -p str, --path str   the path of the picture. (default: '../Data/Images/')
+    ```
+2. **灰度图恢复**:
+    ```shell
+    在cmd或shell中输入：
+    python demo_gray.py -i 图片的名字（默认"lena.jpg"） -p 图片的路径（默认"../Data/Images/"）
+
+    或者输入查看帮助：
+    python demo_gray.py -h
+    结果如下：
+    usage: demo_gray.py [-h] [-i str] [-p str]
+
+    A demo for gray image recover.
+
+    optional arguments:
+    -h, --help           show this help message and exit
+    -i str, --image str  the name of the image. (default: 'lena.jpg' )
+    -p str, --path str   the path of the picture. (default: '../Data/Images/')
+    ```
 
 ---
 *To my family,with love*    

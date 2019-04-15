@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-@Time    : 2019/4/10 10:40
+@Time    : 2019/4/16 4:46
 @Author  : QuYue
 @File    : demo.py
 @Software: PyCharm
-Introduction: A demo for picture recover
+Introduction: demo for RGB picture recover
 """
 # %% Import Packages
 import matplotlib.pyplot as plt
@@ -16,12 +16,31 @@ import processing
 import model
 
 # %% Get the arguments from cmd.
-parser = argparse.ArgumentParser(description='A demo for image recover.')
+parser = argparse.ArgumentParser(description='A demo for RGB image recover.')
 parser.add_argument('-i', '--image', type=str, default='lena.jpg', metavar='str',
                     help="the name of the image. (default: 'lena.jpg' )")
 parser.add_argument('-p', '--path', type=str, default='../Data/Images/', metavar='str',
                     help="the path of the picture. (default: '../Data/Images/')")
 Args = parser.parse_args() # the Arguments
+
+# %% Functions
+def rbg_feature(image, axis=0):
+    if len(image.shape) == 3:
+        image = image.swapaxes(axis, 0)
+        image_f = np.hstack([image[..., 0], image[..., 1], image[..., 2]])
+        image_f = image_f.swapaxes(axis, 0)
+        return image_f
+    else:
+        return image
+
+def rbg_image(image_f, axis=0):
+    image_f = image_f.swapaxes(axis, 0)
+    L = image_f.shape[1] // 3
+    image = np.array([image_f[:, :L], image_f[:, L: 2*L], image_f[:, 2*L: 3* L]])
+    image= image.transpose(1, 2, 0)
+    image = image.swapaxes(axis, 0)
+    return image
+
 
 
 #%% Main Function
@@ -30,23 +49,18 @@ if __name__ == '__main__':
     image_name = Args.image # get the images name
     image_path = Args.path # get the path of the images
     image = mpimg.imread(image_path + image_name) # read the images
+    image_f = rbg_feature(image)
     plt.ion()
     plt.figure(1) # show
-    plt.subplot(1, 3, 1)
-    plt.imshow(image)
+    plt.subplot(1, 2, 1)
+    score = np.sum(np.abs(np.diff(image_f, axis=0)))
+    plt.imshow(rbg_image(image_f))
     plt.axis('off')
-    plt.title(image_name)
-    # %% Gray
-    gray_image = processing.rgb2gray(image)
-    plt.subplot(1, 3, 2) # show
-    plt.imshow(gray_image, cmap='gray')
-    score = np.sum(np.abs(np.diff(gray_image, axis=0)))
-    plt.axis('off')
-    plt.title('%s-Gray %d' %(image_name, score))
+    plt.title('%s %d' %(image_name, score))
     # %% Shuffle
-    shuffle_image, _ = processing.shuffle(gray_image, axis=0)
-    plt.subplot(1, 3, 3) # show
-    plt.imshow(shuffle_image, cmap='Greys_r')
+    shuffle_image, _ = processing.shuffle(image_f, axis=0)
+    plt.subplot(1, 2, 2) # show
+    plt.imshow(rbg_image(shuffle_image), cmap='Greys_r')
     score = np.sum(np.abs(np.diff(shuffle_image, axis=0)))
     plt.title('shuffle %d' %score)
     plt.axis('off')
@@ -55,7 +69,7 @@ if __name__ == '__main__':
     new_image1 = model.svd_imsort(shuffle_image)
     # show
     plt.figure(2)
-    plt.imshow(new_image1, cmap='gray')
+    plt.imshow(rbg_image(new_image1), cmap='gray')
     score = np.sum(np.abs(np.diff(new_image1, axis=0)))
     plt.title('SVD_imsort %d' %score)
     plt.axis('off')
@@ -67,7 +81,7 @@ if __name__ == '__main__':
     for i in range(1, 21):
         plt.subplot(4, 5, i)
         new_image2, _ = recover.svd_greed(u_num=i)
-        plt.imshow(new_image2, cmap='gray')
+        plt.imshow(rbg_image(new_image2), cmap='gray')
         score = np.sum(np.abs(np.diff(new_image2, axis=0)))
         plt.title('u=%d %d' %(i, score))
         plt.axis('off')
@@ -75,13 +89,14 @@ if __name__ == '__main__':
     # %% Direct greed
     plt.figure(4)
     new_image3, _ = recover.direct_greed()
-    plt.imshow(new_image3, cmap='Greys_r')
+    plt.imshow(rbg_image(new_image3), cmap='Greys_r')
     score = np.sum(np.abs(np.diff(new_image3, axis=0)))
     plt.title('Direct_greed %d' %score)
     plt.axis('off')
     plt.draw()
     plt.ioff()
     plt.show()
+
 
 
 
