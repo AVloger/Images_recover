@@ -23,7 +23,6 @@ parser.add_argument('-p', '--path', type=str, default='../Data/Images/', metavar
                     help="the path of the picture. (default: '../Data/Images/')")
 Args = parser.parse_args() # the Arguments
 
-
 #%% Main Function
 if __name__ == '__main__':
     # %% Read Data
