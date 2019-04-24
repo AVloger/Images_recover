@@ -11,16 +11,17 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import numpy as np
 import argparse
-
-import processing
-import model
+import sys
+sys.path.append('..') # add the path which includes the packages
+import image_recover.processing as processing
+import image_recover.model as model
 
 # %% Get the arguments from cmd.
 parser = argparse.ArgumentParser(description='A demo for RGB image recover.')
 parser.add_argument('-i', '--image', type=str, default='lena.jpg', metavar='str',
                     help="the name of the image. (default: 'lena.jpg' )")
-parser.add_argument('-p', '--path', type=str, default='../Data/Images/', metavar='str',
-                    help="the path of the picture. (default: '../Data/Images/')")
+parser.add_argument('-p', '--path', type=str, default='../../Data/Images/', metavar='str',
+                    help="the path of the picture. (default: '../../Data/Images/')")
 Args = parser.parse_args() # the Arguments
 
 # %% Functions
@@ -41,8 +42,6 @@ def rbg_image(image_f, axis=0):
     image = image.swapaxes(axis, 0)
     return image
 
-
-
 #%% Main Function
 if __name__ == '__main__':
     # %% Read Data
@@ -57,6 +56,7 @@ if __name__ == '__main__':
     plt.imshow(rbg_image(image_f))
     plt.axis('off')
     plt.title('%s %d' %(image_name, score))
+
     # %% Shuffle
     shuffle_image, _ = processing.shuffle(image_f, axis=0)
     plt.subplot(1, 2, 2) # show
@@ -65,6 +65,7 @@ if __name__ == '__main__':
     plt.title('shuffle %d' %score)
     plt.axis('off')
     plt.draw()
+
     # %% SVD image sort
     new_image1 = model.svd_imsort(shuffle_image)
     # show
@@ -86,6 +87,7 @@ if __name__ == '__main__':
         plt.title('u=%d %d' %(i, score))
         plt.axis('off')
     plt.draw()
+
     # %% Direct greed
     plt.figure(4)
     new_image3, _ = recover.direct_greed()

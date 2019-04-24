@@ -9,9 +9,9 @@ Introduction:
 #%% Import Packages
 import datasets
 import torch
-#%%
+# %%
 data = datasets.RobotExecution()
-#%%
+# %%
 feature = []
 target = []
 target_dict = dict()
@@ -23,7 +23,7 @@ for i in data:
         target_dict[i['target']] = counter
         counter += 1
     feature.append(i['data'])
-#%%
+# %%
 
 
 

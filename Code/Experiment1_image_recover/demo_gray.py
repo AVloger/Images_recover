@@ -11,16 +11,17 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import numpy as np
 import argparse
-
-import processing
-import model
+import sys
+sys.path.append('..') # add the path which includes the packages
+import image_recover.processing as processing
+import image_recover.model as model
 
 # %% Get the arguments from cmd.
 parser = argparse.ArgumentParser(description='A demo for gray image recover.')
 parser.add_argument('-i', '--image', type=str, default='lena.jpg', metavar='str',
                     help="the name of the image. (default: 'lena.jpg' )")
-parser.add_argument('-p', '--path', type=str, default='../Data/Images/', metavar='str',
-                    help="the path of the picture. (default: '../Data/Images/')")
+parser.add_argument('-p', '--path', type=str, default='../../Data/Images/', metavar='str',
+                    help="the path of the picture. (default: '../../Data/Images/')")
 Args = parser.parse_args() # the Arguments
 
 #%% Main Function
