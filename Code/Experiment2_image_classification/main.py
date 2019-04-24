@@ -50,7 +50,7 @@ except:
 if __name__ == '__main__':
     if datasets_name == 'MNIST':
         print('Using the MNIST dataset.')
-        data_train, data_test = datasets.MNIST()
+        data_train, data_test = datasets.MNIST(True)
         data_loader_train = torch.utils.data.DataLoader(dataset=data_train, batch_size=Args.batch_size, shuffle=True)
         data_loader_test = torch.utils.data.DataLoader(dataset=data_test, batch_size=Args.batch_size, shuffle=True)
 
