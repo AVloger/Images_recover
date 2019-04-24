@@ -35,8 +35,10 @@ parser.add_argument('-s', '--show', action='store_true', default=False,
                     help='enables show the accuracy')
 
 Args = parser.parse_args() # the Arguments
-Args.cuda = True
-Args.show = True
+# Args.cuda = True
+# Args.show = True
+if Args.cuda:
+    print('Using GPU.')
 # %% DataSet ID
 datasets_id = {1: 'MNIST'}
 try:
@@ -59,6 +61,7 @@ if __name__ == '__main__':
             plt.ion()
             figure = plt.figure(1)
             Accuracy = []
+        print('==>Start Training.')
         for epoch in range(Args.epochs):
             for step , (x, y) in enumerate(data_loader_train):
                 if Args.cuda:
