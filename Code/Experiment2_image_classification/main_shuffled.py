@@ -19,6 +19,7 @@ import sys
 sys.path.append('..') # add the path which includes the packages
 import image_recover.processing as processing
 import image_recover.model as model
+import image_recover.score as score
 
 # %% Get the arguments from cmd.
 parser = argparse.ArgumentParser(description='An experiment to compare the effect of image classification before and after restoration.')
@@ -47,66 +48,45 @@ try:
 except:
     print('Because of a wrong dataset. You will using the default MNIST dataset.')
     datasets_name = 'MNIST'
-#%%
-def images_feature(image, axis=0, axis_num=2):
-    # axis: the shuffled axis
-    # axis_num: the num axis
-    if len(image.shape) == 3 and axis != axis_num:
-        image = image.transpose(axis,2,0)
-        temp = []
-        for i in range(image)
-        image_f = np.hstack([image[..., 0], image[..., 1], image[..., 2]])
-        image_f = image_f.swapaxes(axis, 0)
-        return image_f
-    else:
-        return image
 
-def rbg_image(image_f, axis=0):
-    image_f = image_f.swapaxes(axis, 0)
-    L = image_f.shape[1] // 3
-    image = np.array([image_f[:, :L], image_f[:, L: 2*L], image_f[:, 2*L: 3* L]])
-    image= image.transpose(1, 2, 0)
-    image = image.swapaxes(axis, 0)
-    return image
 # %% Main Function
 if __name__ == '__main__':
     if datasets_name == 'MNIST':
         print('Using the MNIST dataset.')
         data_train, data_test = datasets.MNIST(True)
-        data = data_train.data[:3]
-        axis = 0
-        data = np.array(data).transpose(1,2,0)
-        data = rbg_feature(data)
-        data_shuffled, _ = processing.shuffle(data, axis=axis)
-        recover = model.ImageRecover(data_shuffled, axis=axis)
-        data_recover,_ = recover.direct_greed()
+        axis = 1
+        num_index = [1, 3, 5, 7, 2, 0, 13, 15, 17, 4] # save 0,1,2,3,4,5,6,7,8,9
+        data = data_train.data[:500]
+        data = np.array(data)
+        data_shuffled, index0 = processing.shuffle(data, axis=axis)
+        index0 = np.array(index0) # change to ndarray
+        recover = model.ImageRecover(data_shuffled)
+        data_recover, index = recover.direct_greed()
+        k_coeff, k_distance = score.Kendal(index0[index], range(len(index)))
         plt.figure(1)
         plt.subplot(1, 3, 1) # show
-        plt.imshow(data, cmap='gray')
+        plt.imshow(np.hstack(data[num_index]), cmap='gray')
         plt.title('Original')
         plt.subplot(1, 3, 2) # show
-        plt.imshow(data_shuffled, cmap='gray')
+        plt.imshow(np.hstack(data_shuffled[num_index]), cmap='gray')
         plt.title('Shuffled')
         plt.subplot(1, 3, 3) # show
-        plt.imshow(data_recover, cmap='gray')
-        plt.title('Recover')
+        plt.imshow(np.hstack(data_recover[num_index, 0 ,...]), cmap='gray')
+        plt.title('Recover %.2f' %k_coeff)
         #%%
         plt.figure(2)
         for i in range(1, 21):
             plt.subplot(4, 5, i)
-            new_image2, _ = recover.svd_greed(u_num=i)
-            plt.imshow(new_image2, cmap='gray')
-            score = np.sum(np.abs(np.diff(new_image2, axis=0)))
-            plt.title('u=%d %d' % (i, score))
+            data_recover2, index = recover.svd_greed(u_num=i)
+            k_coeff, k_distance = score.Kendal(index0[index], range(len(index)))
+            plt.imshow(np.hstack(data_recover2[num_index, 0 ,...]), cmap='gray')
+            plt.title('u=%d %.2f' % (i, k_coeff))
             plt.axis('off')
-        plt.show()
-
-
-
-
-        # data_loader_train = torch.utils.data.DataLoader(dataset=data_train, batch_size=Args.batch_size, shuffle=True)
-        # data_loader_test = torch.utils.data.DataLoader(dataset=data_test, batch_size=Args.batch_size, shuffle=True)
-
+        plt.draw()
+        #%%
+        data_loader_train = torch.utils.data.DataLoader(dataset=data_train, batch_size=Args.batch_size, shuffle=True)
+        data_loader_test = torch.utils.data.DataLoader(dataset=data_test, batch_size=Args.batch_size, shuffle=True)
+        #%%
         # cnn = models.CNN_MNIST1().cuda() if Args.cuda else models.CNN_MNIST1()
         # loss_func = torch.nn.CrossEntropyLoss()
         # optimizer = torch.optim.Adam(cnn.parameters(), lr=Args.learn_rate)
@@ -161,4 +141,4 @@ if __name__ == '__main__':
         # if Args.show:
         #     plt.ioff()
         #     plt.show()
-
+        #
