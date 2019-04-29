@@ -10,21 +10,34 @@ Introduction: the models for picture recover
 import numpy as np
 from numpy import linalg as la
 #%% Models
-def svd_imsort(image, axis=0):
-    # the svd imsort algorithm
-    image = image.swapaxes(axis, 0) # change the choosen axis to the first axis
-    u, sigma, vt = la.svd(image)
-    index = np.argsort(u[:, 0])
-    new_image = image[index, :]
-    new_image = new_image.swapaxes(axis, 0) # change the axis back
-    return new_image
-
 class ImageRecover():
     # the image recover algorithms
-    def __init__(self, image, axis=0):
-        self.image = image.swapaxes(axis, 0) # image(which the first axis has been shuffled)
-        self.L = self.image.shape[axis]      # the length of the shuffled axis
-        self.axis = axis                     # the shuffled axis
+    def __init__(self, image):
+        """
+        A class for recovering images which has been shuffled.
+        Parameters
+        ---------
+            image: ndarray
+                The image for calculation fluency. The dimension of this tensor can be :
+                    (4)image_num * channels * row(be shuffled) * column
+                    (3)image_num * row(be shuffled) * column
+                    (2)row(be shuffled) * column
+        """
+        image = self.check(image)
+        self.image = image                   # image(image_num * channels * row(be shuffled) * column)
+        self.L = self.image.shape[2]      # the length of the shuffled axis
+
+    def check(self, image):
+        if len(image.shape) == 4:
+            pass
+        elif len(image.shape) == 3:
+            image = image[:, np.newaxis, ...]
+        elif len(image.shape) == 2:
+            image = image[np.newaxis, np.newaxis, ...]
+        else:
+            print('Please input the right image(image_num * channels * row(be shuffled) * column)')
+            image = None
+        return image
 
     def distance_cal(self, vector, matrix):
         # calculate the distance between the vector to every rows from the matrix (vector:(n,), matrix:(i, n))
@@ -77,20 +90,83 @@ class ImageRecover():
                     self.update('first')
         return self.used
 
-    def svd_greed(self, u_num=3, seed=None):
-        if u_num == 0:
-            return self.image.swapaxes(self.axis, 0)
-        u, sigma, vt = la.svd(self.image)
-        self.feature = u[:, :u_num]
-        index = self.greed(seed)
-        new_image = self.image[index, ...]
-        new_image = new_image.swapaxes(self.axis, 0)
-        return new_image, index
-    def direct_greed(self, seed=None):
-        self.feature = self.image
-        index = self.greed(seed)
-        new_image = self.image[index, ...]
-        new_image = new_image.swapaxes(self.axis, 0)
+    def svd_imsort(self, seed=None):
+        new_image, index = self.svd_greed(u_num=1, seed=seed)
         return new_image, index
 
+    def svd_greed(self, u_num=3, seed=None):
+        if u_num == 0:
+            return self.image
+        feature = []
+        for img in self.image:
+            img = np.hstack(img) # channels stack
+            u, sigma, vt = la.svd(img)
+            feature.append(u[:, :u_num])
+        self.feature = np.hstack(feature)
+        index = self.greed(seed)
+        new_image = self.image[:, :, index, :]
+        return new_image, index
+
+    def direct_greed(self, seed=None):
+        self.feature = np.hstack(np.vstack(self.image))
+        index = self.greed(seed)
+        new_image = self.image[:, :, index, :]
+        return new_image, index
+
+
 #%% Main Function
+if __name__ == '__main__':
+    import matplotlib.pyplot as plt
+    import matplotlib.image as mpimg
+    import processing
+    #%% Arguments
+    path = './images/'
+    file = ['YaoMing.jpg', 'Kim.jpg', 'Hanazawa.jpg']
+    num = len(file)
+    # %% Read images
+    plt.figure(1, figsize=(num * 2, 8))
+    images = []
+    for i in range(num):
+        img = mpimg.imread(path + file[i])
+        images.append(img)
+        plt.subplot(5, num, i+1)
+        plt.imshow(img)
+        plt.title(file[i].split('.')[0])
+        plt.axis('off')
+    #%% Shuffled
+    images = np.array(images)
+    images = images.transpose(0, 3, 1, 2)
+    images, _ = processing.shuffle(images, 2)
+    for i in range(num):
+        img_s = images[i].transpose(1, 2, 0)
+        plt.subplot(5, num, i+num+1)
+        plt.imshow(img_s)
+        plt.title('Shuffled')
+        plt.axis('off')
+    #%% SVD imsort
+    recover = ImageRecover(images)
+    images_r0, _ = recover.svd_imsort()
+    for i in range(num):
+        img_r = images_r0[i].transpose(1, 2, 0)
+        plt.subplot(5, num, i+num*2+1)
+        plt.imshow(img_r)
+        plt.title('SVD imsort')
+        plt.axis('off')
+    #%% Direct greed
+    recover = ImageRecover(images)
+    images_r1, _ = recover.direct_greed()
+    for i in range(num):
+        img_r = images_r1[i].transpose(1, 2, 0)
+        plt.subplot(5, num, i+num*3+1)
+        plt.imshow(img_r)
+        plt.title('Direct greed')
+        plt.axis('off')
+    #%% SVD greed
+    images_r2, _ = recover.svd_greed(u_num=10)
+    for i in range(num):
+        img_r = images_r2[i].transpose(1, 2, 0)
+        plt.subplot(5, num, i+num*4+1)
+        plt.imshow(img_r)
+        plt.title('SVD greed')
+        plt.axis('off')
+    plt.show()

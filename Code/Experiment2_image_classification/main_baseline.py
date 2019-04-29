@@ -2,9 +2,9 @@
 """
 @Time    : 2019/4/22 19:57
 @Author  : QuYue
-@File    : main.py
+@File    : main_baseline.py
 @Software: PyCharm
-Introduction: the main function for image classification.
+Introduction: the main function for image classification(baseline).
 """
 # %% Import Packages
 import matplotlib.pyplot as plt
@@ -20,7 +20,7 @@ import image_recover.processing as processing
 import image_recover.model as model
 
 # %% Get the arguments from cmd.
-parser = argparse.ArgumentParser(description='An experiment to compare the effect of image classification before and after restoration.')
+parser = argparse.ArgumentParser(description='A baseline experiment of image classification.')
 parser.add_argument('-d', '--dataset', type=int, default=1, metavar='N',
                     help="choose the dataset for testing. [1: MNIST] (default: 1 )")
 parser.add_argument('-e', '--epochs', type=int, default=10, metavar='N',

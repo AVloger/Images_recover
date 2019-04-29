@@ -15,6 +15,7 @@ import sys
 sys.path.append('..') # add the path which includes the packages
 import image_recover.processing as processing
 import image_recover.model as model
+import image_recover.score as score
 
 # %% Get the arguments from cmd.
 parser = argparse.ArgumentParser(description='A demo for RGB image recover.')
@@ -24,87 +25,66 @@ parser.add_argument('-p', '--path', type=str, default='../../Data/Images/', meta
                     help="the path of the picture. (default: '../../Data/Images/')")
 Args = parser.parse_args() # the Arguments
 
-# %% Functions
-def rbg_feature(image, axis=0):
-    if len(image.shape) == 3:
-        image = image.swapaxes(axis, 0)
-        image_f = np.hstack([image[..., 0], image[..., 1], image[..., 2]])
-        image_f = image_f.swapaxes(axis, 0)
-        return image_f
-    else:
-        return image
-
-def rbg_image(image_f, axis=0):
-    image_f = image_f.swapaxes(axis, 0)
-    L = image_f.shape[1] // 3
-    image = np.array([image_f[:, :L], image_f[:, L: 2*L], image_f[:, 2*L: 3* L]])
-    image= image.transpose(1, 2, 0)
-    image = image.swapaxes(axis, 0)
-    return image
-
 #%% Main Function
 if __name__ == '__main__':
     # %% Read Data
     image_name = Args.image # get the images name
     image_path = Args.path # get the path of the images
     image = mpimg.imread(image_path + image_name) # read the images
-    image_f = rbg_feature(image)
+    # change the axis
+    image_f = image.transpose(2, 0, 1)
+    image_f = image_f[np.newaxis, ...]
+    # show
     plt.ion()
     plt.figure(1) # show
     plt.subplot(1, 2, 1)
-    score = np.sum(np.abs(np.diff(image_f, axis=0)))
-    plt.imshow(rbg_image(image_f))
+    fluency = score.fluency(image_f)
+    plt.imshow(image_f[0].transpose(1, 2, 0))
     plt.axis('off')
-    plt.title('%s %d' %(image_name, score))
+    plt.title('%s %d' %(image_name, fluency))
 
     # %% Shuffle
-    shuffle_image, _ = processing.shuffle(image_f, axis=0)
+    shuffle_image, index0  = processing.shuffle(image_f, axis=2)
+    index0 = np.array(index0) # change to ndarray
     plt.subplot(1, 2, 2) # show
-    plt.imshow(rbg_image(shuffle_image), cmap='Greys_r')
-    score = np.sum(np.abs(np.diff(shuffle_image, axis=0)))
-    plt.title('shuffle %d' %score)
+    plt.imshow(shuffle_image[0].transpose(1, 2, 0))
+    fluency = score.fluency(shuffle_image)
+    plt.title('shuffle %d' %fluency)
     plt.axis('off')
     plt.draw()
 
     # %% SVD image sort
-    new_image1 = model.svd_imsort(shuffle_image)
+    recover = model.ImageRecover(shuffle_image)
+    new_image1, index = recover.svd_imsort()
     # show
     plt.figure(2)
-    plt.imshow(rbg_image(new_image1), cmap='gray')
-    score = np.sum(np.abs(np.diff(new_image1, axis=0)))
-    plt.title('SVD_imsort %d' %score)
+    plt.imshow(new_image1[0].transpose(1, 2, 0))
+    fluency = score.fluency(new_image1)
+    k_coeff, k_distance = score.Kendal(index0[index], range(len(index)))
+    plt.title('SVD_imsort %d %.2f' %(fluency, k_coeff))
     plt.axis('off')
     plt.draw()
 
     # %% SVD greed
-    recover = model.ImageRecover(shuffle_image)
     plt.figure(3)
     for i in range(1, 21):
         plt.subplot(4, 5, i)
-        new_image2, _ = recover.svd_greed(u_num=i)
-        plt.imshow(rbg_image(new_image2), cmap='gray')
-        score = np.sum(np.abs(np.diff(new_image2, axis=0)))
-        plt.title('u=%d %d' %(i, score))
+        new_image2, index = recover.svd_greed(u_num=i)
+        plt.imshow(new_image2[0].transpose(1, 2, 0))
+        fluency = score.fluency(new_image2)
+        k_coeff, k_distance = score.Kendal(index0[index], range(len(index)))
+        plt.title('u=%d %d %.2f' %(i, fluency, k_coeff))
         plt.axis('off')
     plt.draw()
 
     # %% Direct greed
     plt.figure(4)
-    new_image3, _ = recover.direct_greed()
-    plt.imshow(rbg_image(new_image3), cmap='Greys_r')
-    score = np.sum(np.abs(np.diff(new_image3, axis=0)))
-    plt.title('Direct_greed %d' %score)
+    new_image3, index = recover.direct_greed()
+    plt.imshow(new_image3[0].transpose(1, 2, 0))
+    fluency = score.fluency(new_image3)
+    k_coeff, k_distance = score.Kendal(index0[index], range(len(index)))
+    plt.title('Direct_greed %d %.2f' %(fluency,k_coeff))
     plt.axis('off')
     plt.draw()
     plt.ioff()
     plt.show()
-
-
-
-
-
-
-
-
-
-

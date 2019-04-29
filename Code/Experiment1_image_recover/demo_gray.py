@@ -15,6 +15,7 @@ import sys
 sys.path.append('..') # add the path which includes the packages
 import image_recover.processing as processing
 import image_recover.model as model
+import image_recover.score as score
 
 # %% Get the arguments from cmd.
 parser = argparse.ArgumentParser(description='A demo for gray image recover.')
@@ -36,58 +37,59 @@ if __name__ == '__main__':
     plt.imshow(image)
     plt.axis('off')
     plt.title(image_name)
+
     # %% Gray
     gray_image = processing.rgb2gray(image)
     plt.subplot(1, 3, 2) # show
     plt.imshow(gray_image, cmap='gray')
-    score = np.sum(np.abs(np.diff(gray_image, axis=0)))
+    fluency = score.fluency(gray_image)
     plt.axis('off')
-    plt.title('%s-Gray %d' %(image_name, score))
+    plt.title('%s-Gray %d' %(image_name, fluency))
+
     # %% Shuffle
-    shuffle_image, _ = processing.shuffle(gray_image, axis=0)
+    shuffle_image, index0 = processing.shuffle(gray_image, axis=0)
+    index0 = np.array(index0) # change to ndarray
     plt.subplot(1, 3, 3) # show
-    plt.imshow(shuffle_image, cmap='Greys_r')
-    score = np.sum(np.abs(np.diff(shuffle_image, axis=0)))
-    plt.title('shuffle %d' %score)
+    plt.imshow(shuffle_image, cmap='gray')
+    fluency = score.fluency(shuffle_image)
+    plt.title('shuffle %d' %fluency)
     plt.axis('off')
     plt.draw()
     # %% SVD image sort
-    new_image1 = model.svd_imsort(shuffle_image)
+    recover = model.ImageRecover(shuffle_image)
+    new_image1, index = recover.svd_imsort()
+    new_image1 = new_image1[0][0]
     # show
     plt.figure(2)
     plt.imshow(new_image1, cmap='gray')
-    score = np.sum(np.abs(np.diff(new_image1, axis=0)))
-    plt.title('SVD_imsort %d' %score)
+    fluency = score.fluency(new_image1)
+    k_coeff, k_distance = score.Kendal(index0[index], range(len(index)))
+    plt.title('SVD_imsort %d %.2f' %(fluency, k_coeff))
     plt.axis('off')
     plt.draw()
 
     # %% SVD greed
-    recover = model.ImageRecover(shuffle_image)
     plt.figure(3)
     for i in range(1, 21):
         plt.subplot(4, 5, i)
-        new_image2, _ = recover.svd_greed(u_num=i)
+        new_image2, index = recover.svd_greed(u_num=i)
+        new_image2 = new_image2[0][0]
         plt.imshow(new_image2, cmap='gray')
-        score = np.sum(np.abs(np.diff(new_image2, axis=0)))
-        plt.title('u=%d %d' %(i, score))
+        fluency = score.fluency(new_image2)
+        k_coeff, k_distance = score.Kendal(index0[index], range(len(index)))
+        plt.title('u=%d %d %.2f' %(i, fluency, k_coeff))
         plt.axis('off')
     plt.draw()
+
     # %% Direct greed
     plt.figure(4)
-    new_image3, _ = recover.direct_greed()
+    new_image3, index = recover.direct_greed()
+    new_image3 = new_image3[0][0]
     plt.imshow(new_image3, cmap='Greys_r')
-    score = np.sum(np.abs(np.diff(new_image3, axis=0)))
-    plt.title('Direct_greed %d' %score)
+    fluency = score.fluency(new_image3)
+    k_coeff, k_distance = score.Kendal(index0[index], range(len(index)))
+    plt.title('Direct_greed %d %.2f' %(fluency, k_coeff))
     plt.axis('off')
     plt.draw()
     plt.ioff()
     plt.show()
-
-
-
-
-
-
-
-
-
