@@ -100,7 +100,7 @@ if __name__ == '__main__':
             # draw
             if Args.show:
                 Accuracy.append(accuracy)
-                drawing.draw_result(Accuracy, figure, 'Accuracy', True)
+                drawing.draw_result([Accuracy], figure, ['Accuracy'], True)
             # empty memory
             del x, y, all_y, all_pred, output
             if Args.cuda: torch.cuda.empty_cache()  # empty GPU memory
